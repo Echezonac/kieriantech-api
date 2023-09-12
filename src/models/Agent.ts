@@ -3,15 +3,10 @@ import mongoose, { Document, Schema } from "mongoose";
 
 const AgentSchema: Schema = new Schema(
   {
-    agentId: {
+    username: {
       type: String,
-      // required: true,
-      // unique: true,
-      // length: 12,
-    },
-    balance: {
-      type: Number,
-      default: 0,
+      required: true,
+      unique: true,
     },
     pin: {
       type: String,
@@ -24,5 +19,18 @@ const AgentSchema: Schema = new Schema(
   }
 );
 
-export default mongoose.model("Agent", AgentSchema);
+AgentSchema.pre("save", async function (next) {
+  if (this.isModified("pin") || this.isNew) {
+    const salt = await bcrypt.genSalt(10);
+    this.pin = await bcrypt.hash(this.pin, salt);
+  }
+  next();
+});
 
+AgentSchema.methods.comparePin = async function (
+  pin: string
+): Promise<boolean> {
+  return bcrypt.compare(pin, this.pin);
+};
+
+export default mongoose.model("Agent", AgentSchema);

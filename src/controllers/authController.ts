@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { ConflictError, NotFoundError, ValidationError } from "../customErrors";
 import { successResponse } from "../helpers";
 import logger from "../logger";
-import User from "../models/User";
+import User from "../models/Agent";
 import { CustomRequest } from "../utils/interfaces";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -14,7 +14,7 @@ export const login = async (
   next: NextFunction
 ) => {
   try {
-    const { username, password } = req.body;
+    const { username, pin } = req.body;
 
     const user = await User.findOne({ username });
 
@@ -22,7 +22,7 @@ export const login = async (
       throw new ValidationError("Invalid credentials!");
     }
 
-    const isMatch = await user.comparePassword(req.body.password);
+    const isMatch = await user.comparePin(req.body.pin);
     if (!isMatch) {
       throw new ValidationError("Invalid credentials!");
     }
@@ -49,7 +49,7 @@ export const getSingleUser = async (
 ) => {
   try {
     const user = await User.findById(req.params.id).select(
-      "-createdAt -updatedAt -__v -password -otp"
+      "-createdAt -updatedAt -__v -pin -otp"
     );
 
     if (!user) {
@@ -76,7 +76,7 @@ export const getLoggedInUser = async (
 
     console.log("userId", req.user);
 
-    const user = await User.findById(userId as string).select("-password -__v");
+    const user = await User.findById(userId as string).select("-pin -__v");
 
     if (!user) {
       console.log(user);

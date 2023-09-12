@@ -8,7 +8,7 @@ import apiLimiter from "./config/rateLimit";
 import { errorHandler } from "./middlewares/errorHandler";
 import authRoutes from "./routes/auth";
 import transactionRoutes from "./routes/transaction";
-import userRoutes from "./routes/user";
+import agentRoutes from "./routes/agent";
 
 connectDB();
 
@@ -30,7 +30,7 @@ app.use("/api/", apiLimiter); // Apply rate limiting to all /api/ routes
 // Define routes
 app.use("/api/v1/transactions", transactionRoutes);
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/agents", agentRoutes);
 
 // Error handler middleware
 app.use(errorHandler);

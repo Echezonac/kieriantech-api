@@ -1,31 +1,34 @@
-import { NotFoundError } from "../customErrors";
+import { NotFoundError, ServiceError } from "../customErrors";
 import Agent from "../models/Agent";
 import Wallet from "../models/Wallet";
 
-export const transferFunds = async (fromAgentId: string, toWalletId: string, amount: number) => {
-    // Fetch the agent's balance from the db
-    const agent = await Agent.findOne({ agentId: fromAgentId });
-    if (!agent) {
-        throw new NotFoundError('Agent not found')
-    }
+export const transferFunds = async (
+  fromAgentId: string,
+  toAgentId: string,
+  amount: number
+) => {
+  const fromAgentWallet = await Wallet.findOne({ agent: fromAgentId });
+  if (!fromAgentWallet) {
+    throw new NotFoundError("Recipient agent wallet not found");
+  }
 
-    if (amount > agent.balance) {
-        throw new Error('Insufficient funds')
-    }
+  const toAgentWallet = await Wallet.findOne({ agent: toAgentId });
+  if (!toAgentWallet) {
+    throw new NotFoundError("Recipient agent wallet not found");
+  }
 
-    // Fetch the recipient's wallet from the database
-    const wallet = await Wallet.findOne({ walletId: toWalletId });
-    if (!wallet) {
-        throw new NotFoundError('Wallet not found');
-    }
+  if (amount > fromAgentWallet.balance) {
+    throw new ServiceError("Insufficient funds");
+  }
 
-    // Update the agent's and wallet's balance
-    agent.balance -= amount;
-    wallet.balance += amount;
+  // update sender balance
+  await Wallet.updateOne(
+    { agent: fromAgentId },
+    { $inc: { balance: -amount } }
+  );
 
-    // Save the updated agent and wallet
-    await agent.save();
-    await wallet.save();
+  // update receiver balance
+  await Wallet.updateOne({ agent: toAgentId }, { $inc: { balance: amount } });
 
-    return true; // Return true if the transaction was successful
-}
+  return true; // Return true if the transaction was successful
+};

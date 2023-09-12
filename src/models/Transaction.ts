@@ -2,14 +2,13 @@ import mongoose, { Document, Schema } from "mongoose";
 
 const TransactionSchema: Schema = new Schema(
   {
-    fromAgentId: {
+    fromAgent: {
       type: String,
-      required: true,
-      length: 12,
+      ref: 'Agent',
     },
-    toWalletid: {
+    toAgent: {
       type: String,
-      required: true,
+      ref: 'Agent'
     },
     amount: {
       type: Number,
